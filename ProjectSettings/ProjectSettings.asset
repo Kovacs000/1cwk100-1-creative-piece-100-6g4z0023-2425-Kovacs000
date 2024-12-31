@@ -4,7 +4,7 @@
 PlayerSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 26
-  productGUID: 0143a119a50adc74b8ac9550d4e94d7d
+  productGUID: 11aa4bef6905121489929a781d80561e
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: DefaultCompany
-  productName: 2D RPG Game
+  productName: 2D Game
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -631,14 +631,14 @@ PlayerSettings:
   apiCompatibilityLevelPerPlatform: {}
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: 2D RPG Game
+  metroPackageName: 2D Game
   metroPackageVersion: 
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
-  metroApplicationDescription: 2D RPG Game
+  metroApplicationDescription: 2D Game
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0
@@ -707,10 +707,10 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
-  cloudProjectId: f5b64b1a-2eb5-4424-b606-15100236b179
+  cloudProjectId: a5c69003-68e9-4f58-a690-c458c86e5557
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: 2D RPG Game
+  projectName: 2D Game
   organizationId: kovacs000
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
