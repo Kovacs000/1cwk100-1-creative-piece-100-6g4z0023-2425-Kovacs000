@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using TMPro; // For TextMeshPro
 
 public class PlayerController : MonoBehaviour
 {
@@ -18,11 +19,20 @@ public class PlayerController : MonoBehaviour
     private float movementThreshold = 0.2f;
     private bool wasMovingUp;
 
+    public GameObject goldenKeyPrefab; // Reference to the golden key prefab
+
+    public Transform inventoryUI; // Assign this in the Inspector
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         currentSpeed = speed;
+
+        if (inventoryUI == null)
+        {
+            Debug.LogError("Inventory UI not assigned!");
+        }
     }
 
     void FixedUpdate()
@@ -38,7 +48,7 @@ public class PlayerController : MonoBehaviour
 
         if (moveInput.magnitude > 0)
         {
-            lastMovementTime = Time.time;
+            lastMovementTime = Time.time; // Keep track of when the player last moved
         }
     }
 
@@ -59,7 +69,41 @@ public class PlayerController : MonoBehaviour
 
         if (!isMoving)
         {
-            anim.Play(wasMovingUp ? "IdleUp" : "IdleDown");
+            anim.SetBool("IsIdleUp", wasMovingUp);
+        }
+
+        HandleInventoryInput();
+        HandleQuestInteractions();
+    }
+
+    void HandleInventoryInput()
+    {
+        if (Input.GetKeyDown(KeyCode.I))
+        {
+            if (inventoryUI == null) return;
+
+            if (!inventoryUI.gameObject.activeSelf)
+            {
+                Inventory inventory = GetComponent<Inventory>();
+                if (inventory != null)
+                {
+                    string inv = inventory.GetInventoryString();
+                    inventoryUI.GetChild(1).GetComponent<TextMeshProUGUI>().text = inv;
+                    inventoryUI.gameObject.SetActive(true);
+                }
+            }
+            else
+            {
+                inventoryUI.gameObject.SetActive(false);
+            }
+        }
+    }
+
+    void HandleQuestInteractions()
+    {
+        if (goldenKeyPrefab != null && Vector2.Distance(transform.position, goldenKeyPrefab.transform.position) < 1f)
+        {
+            Destroy(goldenKeyPrefab); // Destroy the key after pickup
         }
     }
 }
