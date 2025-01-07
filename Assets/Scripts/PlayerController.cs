@@ -1,6 +1,5 @@
-using System;
 using UnityEngine;
-using TMPro; // For TextMeshPro
+using TMPro;
 
 public class PlayerController : MonoBehaviour
 {
@@ -20,6 +19,7 @@ public class PlayerController : MonoBehaviour
     private bool wasMovingUp;
 
     public GameObject goldenKeyPrefab; // Reference to the golden key prefab
+    private bool swordEquipped = false; // Keep track of sword equipped status
 
     public Transform inventoryUI; // Assign this in the Inspector
 
@@ -74,6 +74,8 @@ public class PlayerController : MonoBehaviour
 
         HandleInventoryInput();
         HandleQuestInteractions();
+        HandleEquipInput();
+        UpdateWeaponAnimation();
     }
 
     void HandleInventoryInput()
@@ -103,7 +105,65 @@ public class PlayerController : MonoBehaviour
     {
         if (goldenKeyPrefab != null && Vector2.Distance(transform.position, goldenKeyPrefab.transform.position) < 1f)
         {
-            Destroy(goldenKeyPrefab); // Destroy the key after pickup
+            Inventory playerInventory = GetComponent<Inventory>();
+            if (playerInventory != null)
+            {
+                playerInventory.Add("Golden Key", 1);
+                MessageDisplay disp = GameObject.Find("MessageHandler").GetComponent<MessageDisplay>();
+                disp.ShowMessage("You picked up a Golden Key!", 2.0f);
+            }
+            Destroy(goldenKeyPrefab); // Destroy the key object in the world
+            goldenKeyPrefab = null; // Set the reference to null to avoid further issues
+        }
+    }
+
+    void HandleEquipInput()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1)) // Equip button "1"
+        {
+            if (!swordEquipped) // If we don't have the sword equipped
+            {
+                Inventory inventory = GetComponent<Inventory>();
+                if (inventory != null && inventory.GetCount("Sword") > 0)
+                {
+                    EquipSword();
+                }
+            }
+            else // If sword is already equipped, unequip it
+            {
+                UnequipSword();
+            }
+        }
+    }
+
+
+    void EquipSword()
+    {
+        Inventory inventory = GetComponent<Inventory>();
+        if (inventory != null && inventory.GetCount("Sword") > 0)
+        {
+            swordEquipped = true; // Set the sword as equipped
+            inventory.Remove("Sword"); // Remove one sword from the inventory
+            anim.SetBool("IsArmed", true); // Set the animation parameter to armed
+        }
+    }
+
+    void UnequipSword()
+    {
+        swordEquipped = false; // Set sword as unequipped
+        anim.SetBool("IsArmed", false); // Set the animation parameter to unarmed
+    }
+
+    // Method to update the weapon animation based on whether the sword is equipped
+    void UpdateWeaponAnimation()
+    {
+        if (swordEquipped)
+        {
+            anim.SetBool("IsArmed", true); // If sword is equipped, show armed animations
+        }
+        else
+        {
+            anim.SetBool("IsArmed", false); // If sword is unequipped, show unarmed animations
         }
     }
 }

@@ -1,8 +1,12 @@
- using UnityEngine;
+using UnityEngine;
 
 public class NPC1 : MonoBehaviour
 {
-    MessageDisplay messageBox;
+    private MessageDisplay messageBox;
+    public GameObject rewardPrefab;
+    public string keyItemName = "Golden Key";
+    private bool questComplete = false;
+    public float rewardDistance = 2.0f;
 
     void Start()
     {
@@ -11,12 +15,11 @@ public class NPC1 : MonoBehaviour
 
     void AnswerFunc(bool answer)
     {
-        if (answer)
+        if (answer && !questComplete)
         {
             messageBox.ShowMultilineMessage("Thank you! The blacksmith's house is just beyond the mountain pass. I'll be here when you return.");
-            // Implement quest logic here
         }
-        else
+        else if (!answer)
         {
             messageBox.ShowMultilineMessage("I understand. If you change your mind, the offer still stands.");
         }
@@ -26,7 +29,53 @@ public class NPC1 : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            messageBox.YesNoMessage("Oh, hello there! Could you help me? I've lost my golden key. I think I left it somewhere near the blacksmith's house... could you take a look??", AnswerFunc);
+            Inventory playerInventory = collision.gameObject.GetComponent<Inventory>();
+
+            if (!questComplete)
+            {
+                if (playerInventory != null && playerInventory.GetCount(keyItemName) > 0)
+                {
+                    CompleteQuest(collision.gameObject);
+                }
+                else
+                {
+                    messageBox.YesNoMessage(
+                        "Oh, hello there! Could you help me? I've lost my golden key. I think I left it near the blacksmith's house. Could you take a look?",
+                        AnswerFunc
+                    );
+                }
+            }
+            else
+            {
+                messageBox.ShowMultilineMessage("You've already helped me find my key. Thank you again!");
+            }
+        }
+    }
+
+    private void CompleteQuest(GameObject player)
+    {
+        questComplete = true;
+        messageBox.ShowMultilineMessage("Thank you for finding my key! Here, take this sword as a reward.");
+
+        if (rewardPrefab != null)
+        {
+            Vector3 rewardPosition = transform.position + transform.right * rewardDistance;
+            GameObject sword = Instantiate(rewardPrefab, rewardPosition, Quaternion.identity);
+            Collectable collectable = sword.GetComponent<Collectable>();
+
+            if (collectable == null)
+            {
+                collectable = sword.AddComponent<Collectable>();
+            }
+
+            collectable.itemName = "Sword";
+            collectable.itemPrefab = sword;
+        }
+
+        Inventory playerInventory = player.GetComponent<Inventory>();
+        if (playerInventory != null)
+        {
+            playerInventory.Remove(keyItemName);
         }
     }
 }
