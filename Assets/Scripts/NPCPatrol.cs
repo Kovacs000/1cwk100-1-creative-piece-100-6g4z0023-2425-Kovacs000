@@ -8,20 +8,17 @@ public class NPCPatrol : MonoBehaviour
     private Rigidbody2D rb;
     private Animator anim;
 
+    private bool isPaused = false;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
-
-        if (patrolPoints.Length == 0)
-        {
-            Debug.LogError("No patrol points assigned!");
-        }
     }
 
     void Update()
     {
-        MoveToNextPatrolPoint();
+        if (!isPaused) MoveToNextPatrolPoint();
     }
 
     void MoveToNextPatrolPoint()
@@ -45,28 +42,25 @@ public class NPCPatrol : MonoBehaviour
 
     void UpdateMovementAnimation(Vector2 direction)
     {
-        // Normalize and round direction to nearest whole number
         float xMovement = Mathf.Round(direction.x);
         float yMovement = Mathf.Round(direction.y);
 
-        // Update animator parameters
         anim.SetFloat("xMovement", xMovement);
         anim.SetFloat("yMovement", yMovement);
 
-        // Determine if NPC is walking
         bool isWalking = direction.magnitude > 0.1f;
         anim.SetBool("IsWalking", isWalking);
     }
 
-    // Method to stop patrol
     public void StopPatrol()
     {
+        isPaused = true;
         rb.velocity = Vector2.zero;
+        anim.SetBool("IsWalking", false);
     }
 
-    // Method to resume patrol
     public void ResumePatrol()
     {
-        MoveToNextPatrolPoint();
+        isPaused = false;
     }
 }

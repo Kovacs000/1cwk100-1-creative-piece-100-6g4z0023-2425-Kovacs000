@@ -14,25 +14,16 @@ public class PlayerController : MonoBehaviour
     private float xSpeed;
     private float ySpeed;
 
-    private float lastMovementTime;
-    private float movementThreshold = 0.2f;
-    private bool wasMovingUp;
-
-    public GameObject goldenKeyPrefab; // Reference to the golden key prefab
     private bool swordEquipped = false; // Keep track of sword equipped status
-
     public Transform inventoryUI; // Assign this in the Inspector
+
+    private Vector2 lastDirection; // Keep track of the last movement direction
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         currentSpeed = speed;
-
-        if (inventoryUI == null)
-        {
-            Debug.LogError("Inventory UI not assigned!");
-        }
     }
 
     void FixedUpdate()
@@ -48,7 +39,7 @@ public class PlayerController : MonoBehaviour
 
         if (moveInput.magnitude > 0)
         {
-            lastMovementTime = Time.time; // Keep track of when the player last moved
+            lastDirection = moveInput; // Store the last direction when moving
         }
     }
 
@@ -60,22 +51,47 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("IsSprinting", isSprinting);
 
         bool isMoving = moveInput.magnitude > 0;
-
         anim.SetFloat("xspeed", xSpeed);
         anim.SetFloat("yspeed", ySpeed);
         anim.SetBool("IsMoving", isMoving);
 
-        wasMovingUp = ySpeed > 0 && (Time.time - lastMovementTime <= movementThreshold);
-
         if (!isMoving)
         {
-            anim.SetBool("IsIdleUp", wasMovingUp);
+            // If not moving, set the appropriate idle animation based on last movement direction
+            SetIdleAnimation();
         }
 
         HandleInventoryInput();
         HandleQuestInteractions();
         HandleEquipInput();
         UpdateWeaponAnimation();
+    }
+
+    void SetIdleAnimation()
+    {
+        // Reset idle animations first to prevent incorrect idle states
+        anim.SetBool("IsIdleUp", false);
+        anim.SetBool("IsIdleDown", false);
+        anim.SetBool("IsIdleLeft", false);
+        anim.SetBool("IsIdleRight", false);
+
+        // Set the idle animation based on the last movement direction
+        if (lastDirection.y > 0)
+        {
+            anim.SetBool("IsIdleUp", true);
+        }
+        else if (lastDirection.y < 0)
+        {
+            anim.SetBool("IsIdleDown", true);
+        }
+        else if (lastDirection.x < 0)
+        {
+            anim.SetBool("IsIdleLeft", true);
+        }
+        else if (lastDirection.x > 0)
+        {
+            anim.SetBool("IsIdleRight", true);
+        }
     }
 
     void HandleInventoryInput()
@@ -103,31 +119,17 @@ public class PlayerController : MonoBehaviour
 
     void HandleQuestInteractions()
     {
-        if (goldenKeyPrefab != null && Vector2.Distance(transform.position, goldenKeyPrefab.transform.position) < 1f)
-        {
-            Inventory playerInventory = GetComponent<Inventory>();
-            if (playerInventory != null)
-            {
-                playerInventory.Add("Golden Key", 1);
-                MessageDisplay disp = GameObject.Find("MessageHandler").GetComponent<MessageDisplay>();
-                disp.ShowMessage("You picked up a Golden Key!", 2.0f);
-            }
-            Destroy(goldenKeyPrefab); // Destroy the key object in the world
-            goldenKeyPrefab = null; // Set the reference to null to avoid further issues
-        }
+        // Handle quest interactions (e.g., golden key pickup)
     }
 
     void HandleEquipInput()
     {
-        if (Input.GetKeyDown(KeyCode.Alpha1)) // Equip button "1"
+        // If "1" is pressed, toggle sword equip
+        if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            if (!swordEquipped) // If we don't have the sword equipped
+            if (!swordEquipped) // If sword is not equipped
             {
-                Inventory inventory = GetComponent<Inventory>();
-                if (inventory != null && inventory.GetCount("Sword") > 0)
-                {
-                    EquipSword();
-                }
+                EquipSword();
             }
             else // If sword is already equipped, unequip it
             {
@@ -136,13 +138,12 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-
     void EquipSword()
     {
         Inventory inventory = GetComponent<Inventory>();
         if (inventory != null && inventory.GetCount("Sword") > 0)
         {
-            swordEquipped = true; // Set the sword as equipped
+            swordEquipped = true; // Set sword as equipped
             inventory.Remove("Sword"); // Remove one sword from the inventory
             anim.SetBool("IsArmed", true); // Set the animation parameter to armed
         }
@@ -154,7 +155,6 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("IsArmed", false); // Set the animation parameter to unarmed
     }
 
-    // Method to update the weapon animation based on whether the sword is equipped
     void UpdateWeaponAnimation()
     {
         if (swordEquipped)

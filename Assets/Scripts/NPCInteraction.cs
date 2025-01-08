@@ -2,15 +2,20 @@ using UnityEngine;
 
 public class NPCInteraction : MonoBehaviour
 {
-    public string npcMessage = "Hello, traveler! Can you help me?";
+    public string questIntroMessage = "I need help clearing rocks and tree barks around town. It's easier with a sword!";
+    public string questInProgressMessage = "Please clear the rocks and tree barks for me.";
+    public string questCompletionMessage = "Thank you for clearing the debris! Here's your reward.";
+    private bool isQuestStarted = false;
+    private bool isQuestCompleted = false;
     private bool isPlayerNear = false;
+
     private NPCPatrol npcPatrolScript;
-    private MessageDisplay messageDisplay;  // Reference to MessageDisplay script
+    private MessageDisplay messageDisplay;
 
     void Start()
     {
         npcPatrolScript = GetComponent<NPCPatrol>();
-        messageDisplay = FindObjectOfType<MessageDisplay>();  // Find the MessageDisplay component in the scene
+        messageDisplay = FindObjectOfType<MessageDisplay>();
     }
 
     void Update()
@@ -21,34 +26,55 @@ public class NPCInteraction : MonoBehaviour
         }
     }
 
-    private void InteractWithNPC()
+    void InteractWithNPC()
     {
         npcPatrolScript.StopPatrol();  // Stop NPC movement
-        messageDisplay.ShowMessage(npcMessage, 3f);  // Display the message for 3 seconds
 
-        // Optional: Add logic to wait for interaction to end, then resume patrol
-        Invoke("ResumePatrol", 3f);  // Resume patrol after 3 seconds
+        if (!isQuestStarted)
+        {
+            // Show quest intro and start the quest
+            isQuestStarted = true;
+            messageDisplay.ShowMessage(questIntroMessage, 5f);
+        }
+        else if (!isQuestCompleted)
+        {
+            // Player still needs to complete the quest
+            messageDisplay.ShowMessage(questInProgressMessage, 3f);
+        }
+        else
+        {
+            // Quest is completed
+            messageDisplay.ShowMessage(questCompletionMessage, 5f);
+        }
+
+        // Resume patrol after the message
+        Invoke("ResumePatrol", 5f);
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
         {
-            isPlayerNear = true;  // Player is in range for interaction
+            isPlayerNear = true;
         }
     }
 
-    private void OnTriggerExit2D(Collider2D other)
+    void OnTriggerExit2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
         {
-            isPlayerNear = false;  // Player is out of range
+            isPlayerNear = false;
         }
     }
 
-    // Method to resume patrol after the interaction
-    private void ResumePatrol()
+    void ResumePatrol()
     {
-        npcPatrolScript.ResumePatrol();  // Start NPC movement again
+        npcPatrolScript.ResumePatrol();
+    }
+
+    // Called when the quest is completed
+    public void CompleteQuest()
+    {
+        isQuestCompleted = true;
     }
 }
