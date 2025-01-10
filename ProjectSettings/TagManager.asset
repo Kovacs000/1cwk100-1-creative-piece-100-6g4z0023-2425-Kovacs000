@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Rock
   - TreeBark
+  - GoldenKey
   layers:
   - Default
   - TransparentFX

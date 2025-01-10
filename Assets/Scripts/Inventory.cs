@@ -4,17 +4,12 @@ using UnityEngine;
 
 public class Inventory : MonoBehaviour
 {
-    // Store items and their counts
     private Dictionary<string, int> items = new Dictionary<string, int>();
 
-    // Get the count of a specific item
-    public int GetCount(string item)
+    // Check if an item exists in the inventory
+    public bool HasItem(string itemName)
     {
-        if (items.ContainsKey(item))
-        {
-            return items[item]; // Return the count if the item exists
-        }
-        return 0; // Return 0 if the item doesn't exist
+        return items.ContainsKey(itemName) && items[itemName] > 0;
     }
 
     // Add an item to the inventory
@@ -22,11 +17,11 @@ public class Inventory : MonoBehaviour
     {
         if (items.ContainsKey(item))
         {
-            items[item] += count; // Add to the existing count
+            items[item] += count;
         }
         else
         {
-            items[item] = count; // Add the new item with its count
+            items[item] = count;
         }
     }
 
@@ -35,23 +30,33 @@ public class Inventory : MonoBehaviour
     {
         if (items.ContainsKey(item))
         {
-            if (count == -1) // Remove the item completely
+            if (count == -1)
             {
                 items.Remove(item);
             }
             else
             {
                 int newCount = items[item] - count;
-                if (newCount < 1)
+                if (newCount <= 0)
                 {
-                    items.Remove(item); // Remove the item if the count drops below 1
+                    items.Remove(item);
                 }
                 else
                 {
-                    items[item] = newCount; // Update the item's count
+                    items[item] = newCount;
                 }
             }
         }
+    }
+
+    // Get count of a specific item
+    public int GetCount(string itemName)
+    {
+        if (items.ContainsKey(itemName))
+        {
+            return items[itemName];
+        }
+        return 0;
     }
 
     // Get a string representation of the inventory

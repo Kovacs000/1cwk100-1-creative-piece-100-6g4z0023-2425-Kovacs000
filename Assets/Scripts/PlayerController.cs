@@ -147,23 +147,26 @@ public class PlayerController : MonoBehaviour
             inventory.Remove("Sword"); // Remove one sword from the inventory
             anim.SetBool("IsArmed", true); // Set the animation parameter to armed
         }
+        UpdateWeaponAnimation(); // Ensure weapon animation updates immediately
     }
 
     void UnequipSword()
     {
         swordEquipped = false; // Set sword as unequipped
-        anim.SetBool("IsArmed", false); // Set the animation parameter to unarmed
+        anim.SetBool("IsArmed", false); // Immediately set the animation parameter to unarmed
+
+        // Add the sword back into the inventory when unequipping
+        Inventory inventory = GetComponent<Inventory>();
+        if (inventory != null)
+        {
+            inventory.Add("Sword", 1); // Add one sword back to the inventory
+        }
+        UpdateWeaponAnimation(); // Ensure weapon animation updates immediately
     }
 
     void UpdateWeaponAnimation()
     {
-        if (swordEquipped)
-        {
-            anim.SetBool("IsArmed", true); // If sword is equipped, show armed animations
-        }
-        else
-        {
-            anim.SetBool("IsArmed", false); // If sword is unequipped, show unarmed animations
-        }
+        // Directly ensure the "IsArmed" parameter is updated based on swordEquipped status
+        anim.SetBool("IsArmed", swordEquipped);
     }
 }
