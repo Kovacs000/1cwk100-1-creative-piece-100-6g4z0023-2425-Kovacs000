@@ -10,13 +10,82 @@ public class NPC1 : MonoBehaviour
 
     // QuestManager reference
     private QuestManager questManager;
+    private BoxCollider2D npcCollider;  // Reference to the NPC's BoxCollider2D
+    private bool isPlayerInRange = false; // To track if the player is in range of the NPC
 
     void Start()
     {
         messageBox = GameObject.Find("MessageHandler").GetComponent<MessageDisplay>();
         questManager = FindObjectOfType<QuestManager>();  // Get the QuestManager in the scene
+        npcCollider = GetComponent<BoxCollider2D>();  // Get the NPC's BoxCollider2D
     }
 
+    void Update()
+    {
+        // Allow interaction only if the player is within range and presses 'E'
+        if (isPlayerInRange && Input.GetKeyDown(KeyCode.E))
+        {
+            StartInteraction();
+        }
+    }
+
+    void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Player"))
+        {
+            isPlayerInRange = true; // Player is in range
+        }
+    }
+
+    void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Player"))
+        {
+            isPlayerInRange = false; // Player is out of range
+        }
+    }
+
+    void StartInteraction()
+    {
+        Inventory playerInventory = GameObject.FindGameObjectWithTag("Player").GetComponent<Inventory>();
+
+        if (questManager != null)
+        {
+            string questStatus = questManager.GetQuestStatus("Golden Key"); // Get the current quest status
+
+            if (questStatus == "Not Started")
+            {
+                messageBox.YesNoMessage(
+                    "Oh, hello there! Could you help me? I've lost my golden key. I think I left it near the blacksmith's house. Could you take a look?",
+                    AnswerFunc
+                );
+            }
+            else if (questStatus == "In Progress")
+            {
+                messageBox.ShowMultilineMessage("You're already on the quest to retrieve the golden key. Please return once you have it.");
+            }
+            else if (questStatus == "Return the Key")
+            {
+                // Check if the player has the golden key in their inventory
+                if (playerInventory != null && playerInventory.HasItem(keyItemName))
+                {
+                    messageBox.ShowMultilineMessage("Quest Completed: You have returned the key! Claim your reward.");
+                    CompleteQuest(GameObject.FindGameObjectWithTag("Player"));  // Complete the quest when the key is returned
+                }
+                else
+                {
+                    messageBox.ShowMultilineMessage("You don't seem to have the golden key. Please bring it to me.");
+                }
+            }
+            else if (questStatus == "Completed")
+            {
+                // Adjusted message after completion to avoid "thank you" in quest description
+                messageBox.ShowMultilineMessage("Quest Completed! Enjoy your reward.");
+            }
+        }
+    }
+
+    // Function to handle Yes/No answers to start quest
     void AnswerFunc(bool answer)
     {
         if (answer && !questComplete)
@@ -30,49 +99,6 @@ public class NPC1 : MonoBehaviour
         else if (!answer)
         {
             messageBox.ShowMultilineMessage("I understand. If you change your mind, the offer still stands.");
-        }
-    }
-
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            Inventory playerInventory = collision.gameObject.GetComponent<Inventory>();
-
-            if (questManager != null)
-            {
-                string questStatus = questManager.GetQuestStatus("Golden Key"); // Get the current quest status
-
-                if (questStatus == "Not Started")
-                {
-                    messageBox.YesNoMessage(
-                        "Oh, hello there! Could you help me? I've lost my golden key. I think I left it near the blacksmith's house. Could you take a look?",
-                        AnswerFunc
-                    );
-                }
-                else if (questStatus == "In Progress")
-                {
-                    messageBox.ShowMultilineMessage("You're already on the quest to retrieve the golden key. Please return once you have it.");
-                }
-                else if (questStatus == "Return the Key")
-                {
-                    // Check if the player has the golden key in their inventory
-                    if (playerInventory != null && playerInventory.HasItem(keyItemName))
-                    {
-                        messageBox.ShowMultilineMessage("Quest Completed: You have returned the key! Claim your reward.");
-                        CompleteQuest(collision.gameObject);  // Complete the quest when the key is returned
-                    }
-                    else
-                    {
-                        messageBox.ShowMultilineMessage("You don't seem to have the golden key. Please bring it to me.");
-                    }
-                }
-                else if (questStatus == "Completed")
-                {
-                    // Adjusted message after completion to avoid "thank you" in quest description
-                    messageBox.ShowMultilineMessage("Quest Completed! Enjoy your reward.");
-                }
-            }
         }
     }
 

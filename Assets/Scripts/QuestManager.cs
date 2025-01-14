@@ -8,6 +8,8 @@ public class QuestManager : MonoBehaviour
     public TextMeshProUGUI questText; // Reference to the TextMeshPro component for quests' descriptions
     public TextMeshProUGUI questProgressText; // Reference to the TextMeshPro component for quests' progress
 
+    public Transform playerTransform; // Add a reference to the player's transform
+
     private Dictionary<string, string> questDescriptions = new Dictionary<string, string>();
     private Dictionary<string, int> questProgress = new Dictionary<string, int>();
     private Dictionary<string, bool> questCompletion = new Dictionary<string, bool>();
@@ -15,8 +17,9 @@ public class QuestManager : MonoBehaviour
 
     // Quest names as example
     public string goldenKeyQuestName = "Golden Key";
-    public string destroyRocksQuestName = "Destroy Rocks";
-    public string destroyTreeBarksQuestName = "Destroy TreeBarks";
+    public string destroyRocksQuestName = "Clearing the path (Rocks)";
+    public string destroyTreeBarksQuestName = "Clearing the path (Tree Barks)";
+    public float maxInteractionDistance = 5f; // Maximum distance to interact with objects
 
     void Start()
     {
@@ -47,6 +50,17 @@ public class QuestManager : MonoBehaviour
 
         // Update the quest UI initially
         UpdateQuestUI();
+
+        // Debug: Check if all references are assigned
+        if (questUI == null) Debug.LogError("questUI is not assigned!");
+        if (questText == null) Debug.LogError("questText is not assigned!");
+        if (questProgressText == null) Debug.LogError("questProgressText is not assigned!");
+
+        // Ensure playerTransform is assigned
+        if (playerTransform == null)
+        {
+            Debug.LogError("Player transform is not assigned!");
+        }
     }
 
     void Update()
@@ -114,10 +128,15 @@ public class QuestManager : MonoBehaviour
                     // Golden Key quest should have 1/1 progress
                     progressInfo += $"{questName}: {progress}/1 - {status}\n";
                 }
-                else
+                else if (questName == destroyRocksQuestName)
                 {
-                    // For other quests (like Rock and TreeBark) progress can be X/10
-                    progressInfo += $"{questName}: {progress}/10 - {status}\n";
+                    // For the Rock quest, update to 8/8 progress
+                    progressInfo += $"{questName}: {progress}/8 - {status}\n";
+                }
+                else if (questName == destroyTreeBarksQuestName)
+                {
+                    // For the Tree Bark quest, update to 11/11 progress
+                    progressInfo += $"{questName}: {progress}/11 - {status}\n";
                 }
 
                 questInfo += $"{questName}: {updatedDescriptions[questName]}\n"; // Use the updated description
@@ -163,29 +182,57 @@ public class QuestManager : MonoBehaviour
     }
 
     // Example to handle progress in the QuestManager for specific quests
-    public void DestroyRock()
+    public void DestroyRock(Transform rockTransform)
     {
         if (questProgress.ContainsKey(destroyRocksQuestName) && !questCompletion[destroyRocksQuestName])
         {
-            questProgress[destroyRocksQuestName] += 1;  // Increment progress by 1
-            if (questProgress[destroyRocksQuestName] >= 10) // Example: quest complete when progress reaches 10
+            if (questStatus[destroyRocksQuestName] == "Not Started")
             {
-                CompleteQuest(destroyRocksQuestName);
+                questStatus[destroyRocksQuestName] = "In Progress";  // Update status to "In Progress"
+                UpdateQuestUI();  // Update UI immediately to show the change
             }
-            UpdateQuestUI();  // Update the UI after progress
+
+            // Check distance to player
+            if (Vector3.Distance(playerTransform.position, rockTransform.position) <= maxInteractionDistance)
+            {
+                questProgress[destroyRocksQuestName] += 1;  // Increment progress by 1
+                if (questProgress[destroyRocksQuestName] >= 8) // Example: quest complete when progress reaches 8
+                {
+                    CompleteQuest(destroyRocksQuestName);
+                }
+                UpdateQuestUI();  // Update the UI after progress
+            }
+            else
+            {
+                Debug.Log("You are too far to destroy this rock.");
+            }
         }
     }
 
-    public void DestroyTreeBark()
+    public void DestroyTreeBark(Transform treeBarkTransform)
     {
         if (questProgress.ContainsKey(destroyTreeBarksQuestName) && !questCompletion[destroyTreeBarksQuestName])
         {
-            questProgress[destroyTreeBarksQuestName] += 1;  // Increment progress by 1
-            if (questProgress[destroyTreeBarksQuestName] >= 10) // Example: quest complete when progress reaches 10
+            if (questStatus[destroyTreeBarksQuestName] == "Not Started")
             {
-                CompleteQuest(destroyTreeBarksQuestName);
+                questStatus[destroyTreeBarksQuestName] = "In Progress";  // Update status to "In Progress"
+                UpdateQuestUI();  // Update UI immediately to show the change
             }
-            UpdateQuestUI();  // Update the UI after progress
+
+            // Check distance to player
+            if (Vector3.Distance(playerTransform.position, treeBarkTransform.position) <= maxInteractionDistance)
+            {
+                questProgress[destroyTreeBarksQuestName] += 1;  // Increment progress by 1
+                if (questProgress[destroyTreeBarksQuestName] >= 11) // Example: quest complete when progress reaches 11
+                {
+                    CompleteQuest(destroyTreeBarksQuestName);
+                }
+                UpdateQuestUI();  // Update the UI after progress
+            }
+            else
+            {
+                Debug.Log("You are too far to destroy this tree bark.");
+            }
         }
     }
 
@@ -198,5 +245,23 @@ public class QuestManager : MonoBehaviour
             questStatus[goldenKeyQuestName] = "Return the Key"; // Update the status to "Return the Key"
             UpdateQuestUI(); // Update the UI after collecting the key
         }
+    }
+
+    public int GetQuestProgress(string questName)
+    {
+        if (questProgress.ContainsKey(questName))
+        {
+            return questProgress[questName];
+        }
+        return 0;
+    }
+
+    public bool IsQuestCompleted(string questName)
+    {
+        if (questCompletion.ContainsKey(questName))
+        {
+            return questCompletion[questName];
+        }
+        return false;
     }
 }

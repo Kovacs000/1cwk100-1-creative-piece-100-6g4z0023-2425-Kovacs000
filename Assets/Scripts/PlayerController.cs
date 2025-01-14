@@ -1,10 +1,12 @@
 using UnityEngine;
 using TMPro;
+using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
     private Rigidbody2D rb;
     private Animator anim;
+    public MessageDisplay messageDisplay;  // Reference to the MessageDisplay script
 
     public float speed = 4.0f;
     public float sprintMultiplier = 1.5f;
@@ -15,15 +17,34 @@ public class PlayerController : MonoBehaviour
     private float ySpeed;
 
     private bool swordEquipped = false; // Keep track of sword equipped status
-    public Transform inventoryUI; // Assign this in the Inspector
+    public Transform inventoryUI; // Inventory UI (assign in Inspector)
 
     private Vector2 lastDirection; // Keep track of the last movement direction
+
+    // Declare 'stone' variable for interacting with it
+    public GameObject stone;  // This should be assigned in the Inspector or dynamically at runtime
+
+    // Add potion tracking
+    private bool potionConsumed = false; // Track if the potion has been consumed
+
+    // Reference to the Message UI (assigned in the inspector)
+    public TextMeshProUGUI messageUI;  // This should be assigned in the Inspector
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         currentSpeed = speed;
+
+        // Dynamically find the stone object by name (or use tag)
+        if (stone == null)
+        {
+            stone = GameObject.Find("BigRock");  // Replace "BigRock" with your actual object name in the scene
+            if (stone == null)
+            {
+                Debug.LogError("Stone object not found in the scene!");
+            }
+        }
     }
 
     void FixedUpdate()
@@ -57,25 +78,74 @@ public class PlayerController : MonoBehaviour
 
         if (!isMoving)
         {
-            // If not moving, set the appropriate idle animation based on last movement direction
             SetIdleAnimation();
         }
 
         HandleInventoryInput();
-        HandleQuestInteractions();
+        HandleQuestInteractions(); // Restored the quest interaction method
         HandleEquipInput();
         UpdateWeaponAnimation();
+
+        // Allow explosion animation only after drinking the potion
+        if (Input.GetKeyDown(KeyCode.B) && potionConsumed)
+        {
+            if (stone != null)
+            {
+                // Immediately trigger the explosion animation
+                Animator stoneAnim = stone.GetComponent<Animator>();
+                if (stoneAnim != null)
+                {
+                    stoneAnim.SetTrigger("Explode"); // Trigger explosion animation on the rock itself
+                }
+
+                // Hide the original rock and show the explosion effect immediately
+                if (stone.transform.childCount >= 2)
+                {
+                    stone.transform.GetChild(0).gameObject.SetActive(false);  // Hide rock
+                    stone.transform.GetChild(1).gameObject.SetActive(true);   // Show explosion effect
+                }
+                else
+                {
+                    Debug.LogWarning("Stone object doesn't have enough children!");
+                }
+
+                // Start the coroutine to disable the collider and renderer after a delay
+                StartCoroutine(DisableColliderAndRendererAfterDelay(0.3f));
+            }
+            else
+            {
+                Debug.LogError("Stone object is not assigned or not found!");
+            }
+        }
+
+        // Check for potion consumption key (P) and call DrinkPotion()
+        if (Input.GetKeyDown(KeyCode.P)) // 'P' to drink potion
+        {
+            DrinkPotion(); // Call method to consume the potion
+        }
+    }
+
+    // Coroutine to disable the collider and renderer after a delay
+    private IEnumerator DisableColliderAndRendererAfterDelay(float delay)
+    {
+        // Wait for the specified delay
+        yield return new WaitForSeconds(delay);
+
+        // Disable the collider and renderer of the stone
+        Collider2D stoneCollider = stone.GetComponent<Collider2D>();
+        Renderer stoneRenderer = stone.GetComponent<Renderer>();
+
+        if (stoneCollider != null) stoneCollider.enabled = false; // Disable collision
+        if (stoneRenderer != null) stoneRenderer.enabled = false; // Disable renderer
     }
 
     void SetIdleAnimation()
     {
-        // Reset idle animations first to prevent incorrect idle states
         anim.SetBool("IsIdleUp", false);
         anim.SetBool("IsIdleDown", false);
         anim.SetBool("IsIdleLeft", false);
         anim.SetBool("IsIdleRight", false);
 
-        // Set the idle animation based on the last movement direction
         if (lastDirection.y > 0)
         {
             anim.SetBool("IsIdleUp", true);
@@ -120,11 +190,11 @@ public class PlayerController : MonoBehaviour
     void HandleQuestInteractions()
     {
         // Handle quest interactions (e.g., golden key pickup)
+        // This is where you'd implement any quest-related logic
     }
 
     void HandleEquipInput()
     {
-        // If "1" is pressed, toggle sword equip
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             if (!swordEquipped) // If sword is not equipped
@@ -147,7 +217,7 @@ public class PlayerController : MonoBehaviour
             inventory.Remove("Sword"); // Remove one sword from the inventory
             anim.SetBool("IsArmed", true); // Set the animation parameter to armed
         }
-        UpdateWeaponAnimation(); // Ensure weapon animation updates immediately
+        UpdateWeaponAnimation();
     }
 
     void UnequipSword()
@@ -155,18 +225,38 @@ public class PlayerController : MonoBehaviour
         swordEquipped = false; // Set sword as unequipped
         anim.SetBool("IsArmed", false); // Immediately set the animation parameter to unarmed
 
-        // Add the sword back into the inventory when unequipping
         Inventory inventory = GetComponent<Inventory>();
         if (inventory != null)
         {
             inventory.Add("Sword", 1); // Add one sword back to the inventory
         }
-        UpdateWeaponAnimation(); // Ensure weapon animation updates immediately
+        UpdateWeaponAnimation();
     }
 
     void UpdateWeaponAnimation()
     {
-        // Directly ensure the "IsArmed" parameter is updated based on swordEquipped status
         anim.SetBool("IsArmed", swordEquipped);
+    }
+
+    // New method to consume the potion
+    public void DrinkPotion()
+    {
+        Inventory inventory = GetComponent<Inventory>();
+        if (inventory != null && inventory.HasItem("Magic Potion"))
+        {
+            inventory.Remove("Magic Potion", 1);  // Remove one potion from inventory
+            potionConsumed = true;  // Set potionConsumed to true after drinking the potion
+            Debug.Log("Potion consumed. Explosion ready!");
+
+            // Display message in MessageUI
+            if (messageDisplay != null)
+            {
+                messageDisplay.ShowMessage("Potion consumed +1 Explosion!", 3f, null); // Display the message on screen
+            }
+        }
+        else
+        {
+            Debug.Log("No Magic Potion in inventory!");  // If no potion, log the message
+        }
     }
 }

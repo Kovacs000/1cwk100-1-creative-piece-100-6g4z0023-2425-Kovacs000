@@ -2,29 +2,39 @@ using UnityEngine;
 
 public class DestroyableObject : MonoBehaviour
 {
-    public string objectType; // "Rock" or "TreeBark"
-    private QuestManager questManager;
+    public int remainingClicks;  // Remaining clicks to destroy
+    private PlayerController playerController;
 
     void Start()
     {
-        questManager = FindObjectOfType<QuestManager>();
+        playerController = FindObjectOfType<PlayerController>();
+        SetRemainingClicks();
     }
 
-    void OnMouseDown()  // Or any interaction mechanism like collision or proximity
+    // Set initial remaining clicks based on sword status
+    void SetRemainingClicks()
     {
-        if (questManager != null)
+        // Generate a random number of clicks between 1 and 7 regardless of sword status
+        remainingClicks = Random.Range(1, 8);
+    }
+
+    void OnMouseDown()
+    {
+        if (remainingClicks > 0)
         {
-            if (objectType == "Rock")
+            remainingClicks--;  // Decrease clicks on interaction
+
+            // If the object is destroyed (remaining clicks are 0)
+            if (remainingClicks == 0)
             {
-                questManager.DestroyRock(); // Increment rock count
-            }
-            else if (objectType == "TreeBark")
-            {
-                questManager.DestroyTreeBark(); // Increment tree bark count
+                DestroyObject();
             }
         }
+    }
 
-        // Only destroy this object
-        Destroy(gameObject);
+    void DestroyObject()
+    {
+        // Destroy the object when remainingClicks reaches 0
+        Destroy(gameObject);  // Destroy the current object
     }
 }

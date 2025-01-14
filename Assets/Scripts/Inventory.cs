@@ -69,4 +69,19 @@ public class Inventory : MonoBehaviour
         }
         return result;
     }
+
+    // Consume potion method (called from the PlayerController)
+    public void ConsumePotion(string itemName)
+    {
+        if (HasItem(itemName)) // Check if the player has the potion
+        {
+            Remove(itemName, 1);  // Remove one potion from inventory
+            Debug.Log($"{itemName} consumed. +1 explosion.");
+            // Optionally, trigger any UI message or effects here
+        }
+        else
+        {
+            Debug.Log("No potion available to consume.");
+        }
+    }
 }
