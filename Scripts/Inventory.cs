@@ -49,7 +49,7 @@ public class Inventory : MonoBehaviour
         }
     }
 
-    // Get count of a specific item
+    // Get the count of a specific item
     public int GetCount(string itemName)
     {
         if (items.ContainsKey(itemName))
@@ -70,14 +70,14 @@ public class Inventory : MonoBehaviour
         return result;
     }
 
-    // Consume potion method (called from the PlayerController)
+    // Consume a potion (e.g., called from PlayerController)
     public void ConsumePotion(string itemName)
     {
-        if (HasItem(itemName)) // Check if the player has the potion
+        if (HasItem(itemName))
         {
-            Remove(itemName, 1);  // Remove one potion from inventory
+            Remove(itemName, 1); // Remove one potion
             Debug.Log($"{itemName} consumed. +1 explosion.");
-            // Optionally, trigger any UI message or effects here
+            // Additional UI or effects can be triggered here
         }
         else
         {

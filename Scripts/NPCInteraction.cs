@@ -21,7 +21,7 @@ public class NPCInteraction : MonoBehaviour
     void Start()
     {
         npcPatrolScript = GetComponent<NPCPatrol>();
-        messageDisplay = FindObjectOfType<MessageDisplay>();  // Dynamically find the MessageDisplay component in the scene
+        messageDisplay = FindObjectOfType<MessageDisplay>();  // Find MessageDisplay component in the scene
 
         if (questManager == null)
         {
@@ -31,21 +31,17 @@ public class NPCInteraction : MonoBehaviour
 
     void Update()
     {
+        // Handle player interaction if near NPC
         if (isPlayerNear && Input.GetKeyDown(KeyCode.E))  // 'E' to interact
         {
             InteractWithNPC();
         }
 
+        // Handle player response (Yes/No) to quest offer
         if (waitingForResponse)
         {
-            if (Input.GetKeyDown(KeyCode.Y))
-            {
-                AcceptQuest();
-            }
-            else if (Input.GetKeyDown(KeyCode.N))
-            {
-                DeclineQuest();
-            }
+            if (Input.GetKeyDown(KeyCode.Y)) AcceptQuest();
+            else if (Input.GetKeyDown(KeyCode.N)) DeclineQuest();
         }
     }
 
@@ -55,17 +51,16 @@ public class NPCInteraction : MonoBehaviour
 
         if (questManager != null)
         {
-            // Get quest names from QuestManager
             string treeBarksQuestName = questManager.destroyTreeBarksQuestName;
             string rocksQuestName = questManager.destroyRocksQuestName;
 
-            // Get progress and completion status from QuestManager
+            // Get quest progress and completion status from QuestManager
             int treeBarkProgress = questManager.GetQuestProgress(treeBarksQuestName);
             int rockProgress = questManager.GetQuestProgress(rocksQuestName);
             bool treeBarksCompleted = questManager.IsQuestCompleted(treeBarksQuestName);
             bool rocksCompleted = questManager.IsQuestCompleted(rocksQuestName);
 
-            // Check if both quests are fully completed
+            // Check quest completion status
             if (treeBarksCompleted && rocksCompleted && treeBarkProgress == 11 && rockProgress == 8)
             {
                 messageDisplay.ShowMessage(questCompletionMessage, 5f, OnMessageComplete);
@@ -83,7 +78,6 @@ public class NPCInteraction : MonoBehaviour
                 }
                 else if (!waitingForResponse)
                 {
-                    // Show quest intro if neither quest is completed
                     messageDisplay.ShowMessage(questIntroMessage, 5f, OnQuestIntroComplete);
                     waitingForResponse = true;
                 }
@@ -91,29 +85,20 @@ public class NPCInteraction : MonoBehaviour
         }
     }
 
-
-
-    // When the quest intro message is shown, we prompt for Yes/No
     void OnQuestIntroComplete()
     {
         if (waitingForResponse)
         {
-            // Show the Yes/No message after quest intro
+            // Prompt for Yes/No after quest intro
             messageDisplay.YesNoMessage(questIntroMessage, AnswerFunc);
         }
     }
 
-    // This method handles the player's response to the quest (Y or N)
+    // Handles the player's response (Yes/No) to the quest offer
     void AnswerFunc(bool answer)
     {
-        if (answer)  // If the player accepted the quest
-        {
-            AcceptQuest();
-        }
-        else  // If the player declined the quest
-        {
-            DeclineQuest();
-        }
+        if (answer) AcceptQuest();
+        else DeclineQuest();
     }
 
     void AcceptQuest()
@@ -135,7 +120,7 @@ public class NPCInteraction : MonoBehaviour
 
     void OnMessageComplete()
     {
-        npcPatrolScript.ResumePatrol();  // Resume NPC patrol after the message is complete
+        npcPatrolScript.ResumePatrol();  // Resume NPC patrol after the message
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -155,18 +140,12 @@ public class NPCInteraction : MonoBehaviour
         }
     }
 
-    void ResumePatrol()
-    {
-        npcPatrolScript.ResumePatrol();
-    }
-
-    // Called when the quest is completed
     public void CompleteQuest()
     {
         isQuestCompleted = true;
         messageDisplay.ShowMessage(questCompletionMessage, 5f, OnMessageComplete);
 
-        // Mark the quest as completed in the QuestManager
+        // Mark quests as completed in QuestManager
         questManager.CompleteQuest(questManager.destroyRocksQuestName);
         questManager.CompleteQuest(questManager.destroyTreeBarksQuestName);
     }
